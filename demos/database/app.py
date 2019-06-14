@@ -16,20 +16,30 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, TextAreaField
 from wtforms.validators import DataRequired
 
+import urllib
+import pyodbc
+quoted = urllib.parse.quote_plus('DRIVER=Oracle;DBQ=localhost:1521/helowin;UID=fzdb;PWD=fzdb')
+
+
 # SQLite URI compatible
 WIN = sys.platform.startswith('win')
 if WIN:
     prefix = 'sqlite:///'
 else:
     prefix = 'sqlite:////'
-
+os.environ['NLS_LANG'] = 'SIMPLIFIED CHINESE_CHINA.UTF8'
+#odbc
+#print(pyodbc.connect('DRIVER=Oracle;DBQ=localhost:1521/helowin;UID=fzdb;PWD=fzdb'))
+#cx_oracle
+#conn = cx_Oracle.connect('fzdb/fzdb@localhost/helowin')
 app = Flask(__name__)
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret string')
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', prefix + os.path.join(app.root_path, 'data.db'))
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', prefix + os.path.join(app.root_path, 'data.db'))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'oracle+cx_oracle://test:test@localhost/helowin?'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -90,7 +100,10 @@ def new_note():
     form = NewNoteForm()
     if form.validate_on_submit():
         body = form.body.data
+
+
         note = Note(body=body)
+        note.id = 1
         db.session.add(note)
         db.session.commit()
         flash('Your note is saved.')
